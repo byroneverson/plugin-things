@@ -40,7 +40,7 @@ impl PluginCanvasWindowAdapter {
     #[allow(clippy::new_ret_no_self)]
     pub fn new() -> Result<Rc<dyn WindowAdapter>, PlatformError> {
         let plugin_canvas_window = WINDOW_TO_SLINT.take().unwrap();
-        
+
         let window_attributes = plugin_canvas_window.attributes();
 
         let scale = window_attributes.scale();
@@ -52,7 +52,7 @@ impl PluginCanvasWindowAdapter {
             height: plugin_canvas_size.height as u32,
         };
 
-        let skia_context = SkiaSharedContext::default();        
+        let skia_context = SkiaSharedContext::default();
 
         #[cfg(target_os="windows")]
         let renderer = SkiaRenderer::default_direct3d(&skia_context);
@@ -63,7 +63,7 @@ impl PluginCanvasWindowAdapter {
 
         let self_rc = Rc::new_cyclic(|self_weak| {
             let slint_window = slint::Window::new(self_weak.clone() as _);
-            
+
             Self {
                 plugin_canvas_window,
                 slint_window,
@@ -99,7 +99,7 @@ impl PluginCanvasWindowAdapter {
         self.scale.store(scale, Ordering::Release);
 
         let combined_scale = scale * self.plugin_canvas_window.os_scale();
-        
+
         self.slint_window.dispatch_event(
             WindowEvent::ScaleFactorChanged { scale_factor: combined_scale as f32 }
         );
@@ -128,7 +128,7 @@ impl PluginCanvasWindowAdapter {
                 }
 
                 i_slint_core::platform::update_timers_and_animations();
-                
+
                 if self.pending_draw.swap(false, Ordering::Relaxed) {
                     self.renderer.render().unwrap();
                 }
@@ -220,7 +220,7 @@ impl PluginCanvasWindowAdapter {
             plugin_canvas::Event::MouseButtonUp { button, position } => {
                 let button = Self::convert_button(button);
                 let position = self.convert_logical_position(position);
-                
+
                 self.slint_window.dispatch_event(WindowEvent::PointerReleased { position, button });
 
                 let buttons_down = self.buttons_down.fetch_sub(1, Ordering::Relaxed);
@@ -247,7 +247,7 @@ impl PluginCanvasWindowAdapter {
                 self.slint_window.dispatch_event(WindowEvent::PointerMoved { position });
                 EventResponse::Handled
             },
-            
+
             plugin_canvas::Event::MouseWheel { position, delta_x, delta_y } => {
                 let position = self.convert_logical_position(position);
                 self.slint_window.dispatch_event(
@@ -259,7 +259,7 @@ impl PluginCanvasWindowAdapter {
                 );
                 EventResponse::Handled
             },
-            
+
             plugin_canvas::Event::DragEntered { .. } => {
                 EventResponse::Ignored
             },
@@ -414,6 +414,7 @@ impl WindowAdapterInternal for PluginCanvasWindowAdapter {
             i_slint_core::items::MouseCursor::NsResize => Some(CursorIcon::NsResize),
             i_slint_core::items::MouseCursor::NeswResize => Some(CursorIcon::NeswResize),
             i_slint_core::items::MouseCursor::NwseResize => Some(CursorIcon::NwseResize),
+            _ => Some(CursorIcon::Default),
         };
 
         self.plugin_canvas_window.set_cursor(cursor);
